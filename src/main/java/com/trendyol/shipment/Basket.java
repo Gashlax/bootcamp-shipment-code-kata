@@ -4,48 +4,100 @@ import javax.naming.SizeLimitExceededException;
 import java.util.List;
 
 public class Basket {
-
     private List<Product> products;
+
+    private final ShipmentSize[] shipmentSizeTypes = ShipmentSize.values();
+
 
     public ShipmentSize getShipmentSize() throws SizeLimitExceededException {
 
         if (products.size() > 5) {
             throw new SizeLimitExceededException("Max 5 products should be on Shipment");
         }
-        int[] itemCounterByShipmentSize = countItemsOnTheBasket(getProducts());
+        int[] itemCounterByShipmentSize = countItemsOnTheBasketByType(getProducts());
 
-        int value = checkThreePairsForShipment(itemCounterByShipmentSize);
+        int value = checkForDesiredNumberOfPairTypes(itemCounterByShipmentSize, 3);
+
         if (value != -1) {
-            return upgradeShipmentSize(value);
+            return upgradeShipmentSizeToUpperSize(value);
         } else {
-            value = getLargestProduct(itemCounterByShipmentSize);
+            value = getLargestSizeProduct(itemCounterByShipmentSize);
         }
-        return valueToShipmentSize(value);
+        return indexToShipmentSize(value);
     }
 
-    public ShipmentSize upgradeShipmentSize(int packageToUpgrade) {
+    /**
+     * Takes product list as a param and returns
+     * item Counter By Shipment Size
+     *
+     * @param products
+     * @return int[]
+     */
+    public int[] countItemsOnTheBasketByType(List<Product> products) {
+        int[] itemCounterByShipmentSize = new int[4];
+
+        int sizeTypeCounter = 0;
+        for (ShipmentSize shipmentSize : shipmentSizeTypes) {
+            for (int i = 0; i < products.size(); i++) {
+                if (products.get(i).getSize() == shipmentSize) {
+                    itemCounterByShipmentSize[sizeTypeCounter] += 1;
+                }
+            }
+            sizeTypeCounter++;
+        }
+        return itemCounterByShipmentSize;
+    }
+
+    /**
+     * Checks for three of a kind and returns the index of type else
+     *  returns -1
+     *
+     * @param itemCounterByShipmentSize
+     * @param desiredPairTypes
+     * @return int
+     */
+    private int checkForDesiredNumberOfPairTypes(int[] itemCounterByShipmentSize, int desiredPairTypes) {
+        int pakcageToUpgrade = -1;
+        for (int i = 0; i < itemCounterByShipmentSize.length; i++) {
+            if (itemCounterByShipmentSize[i] >= desiredPairTypes) {
+                pakcageToUpgrade = i;
+            }
+        }
+        return pakcageToUpgrade;
+    }
+
+    /**
+     * To upgrade package type to upper size
+     *
+     * @param packageToUpgrade
+     * @return ShipmentSize
+     */
+    public ShipmentSize upgradeShipmentSizeToUpperSize(int packageToUpgrade) {
         packageToUpgrade += 1;
-        if (packageToUpgrade == 4) {
-            return valueToShipmentSize(3);
+        if (packageToUpgrade == shipmentSizeTypes.length) {
+            return indexToShipmentSize(shipmentSizeTypes.length - 1);
         } else {
-            return valueToShipmentSize(packageToUpgrade);
+            return indexToShipmentSize(packageToUpgrade);
         }
     }
 
-
-    private ShipmentSize valueToShipmentSize(int value) {
-        if (value == 0) {
-            return ShipmentSize.SMALL;
-        } else if (value == 1) {
-            return ShipmentSize.MEDIUM;
-        } else if (value == 2) {
-            return ShipmentSize.LARGE;
-        } else {
-            return ShipmentSize.X_LARGE;
-        }
+    /**
+     * Converts int to Shipment Size
+     *
+     * @param indexOfSize
+     * @return ShipmentSize
+     */
+    private ShipmentSize indexToShipmentSize(int indexOfSize) {
+        return shipmentSizeTypes[indexOfSize];
     }
 
-    private int getLargestProduct(int[] itemCounterByShipmentSize) {
+    /**
+     * Gets largest package size on the basket
+     *
+     * @param itemCounterByShipmentSize
+     * @return int
+     */
+    private int getLargestSizeProduct(int[] itemCounterByShipmentSize) {
         for (int t = itemCounterByShipmentSize.length - 1; t > -1; t--) {
             if (itemCounterByShipmentSize[t] > 0) {
                 return t;
@@ -53,38 +105,6 @@ public class Basket {
         }
         return -1;
     }
-
-
-    private int checkThreePairsForShipment(int[] itemCounterByShipmentSize) {
-        int pakcageToUpgrade = -1;
-        for (int i = 0; i < itemCounterByShipmentSize.length; i++) {
-            if (itemCounterByShipmentSize[i] >= 3) {
-                pakcageToUpgrade = i;
-            }
-        }
-        return pakcageToUpgrade;
-    }
-
-    public int[] countItemsOnTheBasket(List<Product> products) {
-        int[] itemCounterByShipmentSize = new int[4];
-
-        for (Product product : products) {
-            if (product.getSize() == ShipmentSize.SMALL) {
-                itemCounterByShipmentSize[0] += 1;
-
-            } else if (product.getSize() == ShipmentSize.MEDIUM) {
-                itemCounterByShipmentSize[1] += 1;
-
-            } else if (product.getSize() == ShipmentSize.LARGE) {
-                itemCounterByShipmentSize[2] += 1;
-
-            } else if (product.getSize() == ShipmentSize.X_LARGE) {
-                itemCounterByShipmentSize[3] += 1;
-            }
-        }
-        return itemCounterByShipmentSize;
-    }
-
 
     public List<Product> getProducts() {
         return products;
