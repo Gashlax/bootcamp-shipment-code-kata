@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.naming.SizeLimitExceededException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,11 @@ class BasketTest {
 
         basket.setProducts(products);
 
-        assertThat(basket.getShipmentSize(), equalTo(orderShipmentSize));
+        try {
+            assertThat(basket.getShipmentSize(), equalTo(orderShipmentSize));
+        } catch (SizeLimitExceededException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static Stream<Arguments> shipmentSizeOfProductsAndBasketShipmentSize() {
